@@ -27,14 +27,16 @@ streamlit run app.py
 
 ### Streamlit Community Cloud
 1. Push this repo to GitHub
-2. Go to [share.streamlit.io](https://share.streamlit.io) → **New app**
-3. Select repo `sheldor33/LabGenie`, branch `main`, file `app.py`
-4. Python is pinned to **3.12** via `runtime.txt` (required for reliable installs)
+2. Go to [share.streamlit.io](https://share.streamlit.io) → your app → **Manage app**
+3. Repo `sheldor33/LabGenie`, branch `main`, file `app.py`
+4. **Advanced settings → Python version**: select **3.12** (recommended).  
+   Community Cloud ignores `runtime.txt`; the UI setting is what matters.  
+   If you stay on 3.14, this repo’s `requirements.txt` uses Streamlit ≥1.52 so Pillow installs with a wheel.
 5. Under **Advanced settings → Secrets**, add:
    ```toml
    OPENAI_API_KEY = "sk-..."
    ```
-6. Deploy
+6. Redeploy / reboot the app
 
 ### Privacy note
 Do not upload real patient reports with identifiable information to public demos. Use anonymized sample PDFs for interviews.
