@@ -29,11 +29,12 @@ streamlit run app.py
 1. Push this repo to GitHub
 2. Go to [share.streamlit.io](https://share.streamlit.io) → **New app**
 3. Select repo `sheldor33/LabGenie`, branch `main`, file `app.py`
-4. Under **Advanced settings → Secrets**, add:
+4. Python is pinned to **3.12** via `runtime.txt` (required for reliable installs)
+5. Under **Advanced settings → Secrets**, add:
    ```toml
    OPENAI_API_KEY = "sk-..."
    ```
-5. Deploy
+6. Deploy
 
 ### Privacy note
 Do not upload real patient reports with identifiable information to public demos. Use anonymized sample PDFs for interviews.

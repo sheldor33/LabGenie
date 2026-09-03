@@ -3,8 +3,8 @@ import os
 import nltk
 import streamlit as st
 from dotenv import load_dotenv
-from langchain.chat_models import ChatOpenAI
-from langchain.schema.messages import AIMessage, HumanMessage, SystemMessage
+from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
+from langchain_openai import ChatOpenAI
 from PyPDF2 import PdfReader
 
 st.set_page_config(page_title="Chat with LabGenie", page_icon="🧞")
@@ -41,7 +41,7 @@ def get_openai_api_key() -> str:
 @st.cache_resource
 def get_chat_model():
     os.environ["OPENAI_API_KEY"] = get_openai_api_key()
-    return ChatOpenAI(temperature=0.2)
+    return ChatOpenAI(model="gpt-4o-mini", temperature=0.2)
 
 
 def get_keywords(pdf_doc) -> list[str]:
