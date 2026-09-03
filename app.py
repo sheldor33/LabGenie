@@ -1,13 +1,22 @@
 import os
+from pathlib import Path
 
 import nltk
 import streamlit as st
 from dotenv import load_dotenv
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 from langchain_openai import ChatOpenAI
+from openai import APIError, AuthenticationError, RateLimitError
 from PyPDF2 import PdfReader
 
 st.set_page_config(page_title="Chat with LabGenie", page_icon="🧞")
+
+# Private writable path avoids NLTK's world-writable download warning on Cloud.
+_NLTK_DIR = Path.home() / "nltk_data"
+_NLTK_DIR.mkdir(parents=True, exist_ok=True)
+os.environ.setdefault("NLTK_DATA", str(_NLTK_DIR))
+if str(_NLTK_DIR) not in nltk.data.path:
+    nltk.data.path.insert(0, str(_NLTK_DIR))
 
 
 def ensure_nltk_data() -> None:
@@ -19,7 +28,7 @@ def ensure_nltk_data() -> None:
             else:
                 nltk.data.find(f"tokenizers/{resource}")
         except LookupError:
-            nltk.download(resource, quiet=True)
+            nltk.download(resource, download_dir=str(_NLTK_DIR), quiet=True)
 
 
 def get_openai_api_key() -> str:
@@ -42,6 +51,30 @@ def get_openai_api_key() -> str:
 def get_chat_model():
     os.environ["OPENAI_API_KEY"] = get_openai_api_key()
     return ChatOpenAI(model="gpt-4o-mini", temperature=0.2)
+
+
+def invoke_chat(chat, messages):
+    """Call the model and surface billing/auth errors without crashing the UI."""
+    try:
+        return chat.invoke(messages).content
+    except RateLimitError:
+        st.error(
+            "OpenAI quota exhausted (no credits remaining). "
+            "Add billing credits at "
+            "[platform.openai.com/settings/organization/billing]"
+            "(https://platform.openai.com/settings/organization/billing/), "
+            "then try again."
+        )
+        return None
+    except AuthenticationError:
+        st.error(
+            "OpenAI rejected the API key. Check `OPENAI_API_KEY` in "
+            "Streamlit Secrets."
+        )
+        return None
+    except APIError as exc:
+        st.error(f"OpenAI API error: {exc}")
+        return None
 
 
 def get_keywords(pdf_doc) -> list[str]:
@@ -111,7 +144,9 @@ def main() -> None:
                         ),
                         HumanMessage(content=kw_str),
                     ]
-                    st.session_state.definition = chat.invoke(query).content
+                    result = invoke_chat(chat, query)
+                    if result:
+                        st.session_state.definition = result
 
     if st.session_state.definition:
         st.write(st.session_state.definition)
@@ -129,7 +164,10 @@ def main() -> None:
         )
         st.session_state.chat_history.append(HumanMessage(content=prompt))
 
-        ai_response = chat.invoke(st.session_state.chat_history).content
+        ai_response = invoke_chat(chat, st.session_state.chat_history)
+        if not ai_response:
+            return
+
         st.session_state.chat_history.append(AIMessage(content=ai_response))
 
         response = f"Genie: {ai_response}"
