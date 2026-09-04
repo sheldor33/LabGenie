@@ -39,4 +39,4 @@ streamlit run app.py
 6. Redeploy / reboot the app
 
 ### Privacy note
-Do not upload real patient reports with identifiable information to public demos. Use anonymized sample PDFs for interviews.
+Do not upload real patient reports with identifiable information to public demos.
